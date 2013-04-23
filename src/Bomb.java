@@ -11,15 +11,16 @@ public class Bomb extends GameObj {
 	public static final int VEL_Y = 0;
 
 	private static BufferedImage img;
-	public int timer;
-	private int rad = 1;
+	private int timer;
+	private int rad;
 	private Player owner;
 
 	public Bomb(int p_x, int p_y, int size, int courtWidth, int courtHeight,
-			int interval, Player p) {
+			int interval, int rad, Player p) {
 		super(VEL_X, VEL_Y, p_x, p_y, size, size, courtWidth, courtHeight);
 		timer = 3000 / interval;
 		owner = p;
+		this.rad =rad; 
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(img_file)).getSubimage(243, 90, 20,
@@ -58,6 +59,9 @@ public class Bomb extends GameObj {
 					for (Player p : gameCourt.getPlayers()) {
 						if (gameCourt.getMap()[row][col].intersects(p)) {
 							p.blown();
+							if (p != owner) {
+								owner.gainKill();
+							}
 						}
 					}
 				}

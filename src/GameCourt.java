@@ -23,9 +23,6 @@ import javax.swing.*;
 public class GameCourt extends JPanel {
 
 	// the state of the game logic
-	private Square square; // the Black Square, keyboard control
-	private Circle snitch; // the Golden Snitch, bounces
-	private Poison poison; // the Poison Mushroom, doesn't move
 	private Player p1;
 	private Player p2;
 	private Set<Player> players = new HashSet<Player>();
@@ -38,13 +35,12 @@ public class GameCourt extends JPanel {
 	// Game constants
 	public static final int COURT_WIDTH = 570;
 	public static final int COURT_HEIGHT = 390;
-	public static final int PLAYER_VELOCITY = 2;
 	public static final int BLOCK_SIZE = 30;
 	public static final int HOR_BLOCKS = COURT_WIDTH / BLOCK_SIZE;
 	public static final int VER_BLOCKS = COURT_HEIGHT / BLOCK_SIZE;
 
 	// Update interval for timer in milliseconds
-	public static final int INTERVAL = 35;
+	private static final int INTERVAL = 35;
 
 	public GameCourt(JLabel status) {
 		// creates border around the court area, JComponent method
@@ -68,36 +64,33 @@ public class GameCourt extends JPanel {
 		// events will be handled by its key listener.
 		setFocusable(true);
 
-		// this key listener allows the square to move as long
-		// as an arrow key is pressed, by changing the square's
-		// velocity accordingly. (The tick method below actually
-		// moves the square.)
+		// this key listener allows players to move and place bombs
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_A) {
-					p1.v_x = -PLAYER_VELOCITY;
+					p1.v_x = -p1.getSpeed();
 					p1.setSprite(Direction.LEFT);
 				} else if (e.getKeyCode() == KeyEvent.VK_D) {
-					p1.v_x = PLAYER_VELOCITY;
+					p1.v_x = p1.getSpeed();
 					p1.setSprite(Direction.RIGHT);
 				} else if (e.getKeyCode() == KeyEvent.VK_S) {
-					p1.v_y = PLAYER_VELOCITY;
+					p1.v_y = p1.getSpeed();
 					p1.setSprite(Direction.DOWN);
 				} else if (e.getKeyCode() == KeyEvent.VK_W) {
-					p1.v_y = -PLAYER_VELOCITY;
+					p1.v_y = -p1.getSpeed();
 					p1.setSprite(Direction.UP);
 				}
 				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-					p2.v_x = -PLAYER_VELOCITY;
+					p2.v_x = -p2.getSpeed();
 					p2.setSprite(Direction.LEFT);
 				} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					p2.v_x = PLAYER_VELOCITY;
+					p2.v_x = p2.getSpeed();
 					p2.setSprite(Direction.RIGHT);
 				} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					p2.v_y = PLAYER_VELOCITY;
+					p2.v_y = p2.getSpeed();
 					p2.setSprite(Direction.DOWN);
 				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
-					p2.v_y = -PLAYER_VELOCITY;
+					p2.v_y = -p2.getSpeed();
 					p2.setSprite(Direction.UP);
 				}
 
@@ -110,6 +103,7 @@ public class GameCourt extends JPanel {
 
 			}
 
+			// Checks for key release to stop/reverse movement
 			public void keyReleased(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_D) {
 					if (p1.v_x >= 0) {
@@ -161,10 +155,6 @@ public class GameCourt extends JPanel {
 	 * (Re-)set the state of the game to its initial state.
 	 */
 	public void reset() {
-		square = new Square(COURT_WIDTH, COURT_HEIGHT);
-		poison = new Poison(COURT_WIDTH, COURT_HEIGHT);
-		snitch = new Circle(COURT_WIDTH, COURT_HEIGHT);
-
 		map = new GameObj[HOR_BLOCKS][VER_BLOCKS];
 
 		// Populate map with grass, bricks, or walls
@@ -210,18 +200,11 @@ public class GameCourt extends JPanel {
 	 * triggers.
 	 */
 	void tick() {
-
+		double powerUp = 0;
 		if (playing) {
-			// check for the game end conditions
-			if (square.intersects(poison)) {
-				playing = false;
-				status.setText("You lose!");
-			} else if (square.intersects(snitch)) {
-				playing = false;
-				status.setText("You win!");
-			}
-
-			status.setText("Running...");
+			status.setText("Player 1: Kills " + p1.getKills() + "Deaths"
+					+ p1.getDeaths());
+			// Countdown for bombs. If the bomb timer reaches 0, it blows
 			for (int row = 0; row < HOR_BLOCKS; row++) {
 				for (int col = 0; col < VER_BLOCKS; col++) {
 					if (map[row][col] instanceof Bomb) {
@@ -233,10 +216,42 @@ public class GameCourt extends JPanel {
 					}
 				}
 			}
+			/*
+			 * Iterates through the map: generate powerups; remove gained
+			 * powerups; check if anything has been blown, if so, replace it
+			 * with grass.
+			 */
 			for (int row = 0; row < HOR_BLOCKS; row++) {
 				for (int col = 0; col < VER_BLOCKS; col++) {
-					if ((map[row][col] instanceof Bomb
-							|| map[row][col] instanceof Brick || map[row][col] instanceof Player)
+					if (map[row][col] instanceof Brick
+							&& map[row][col].isBlown()) {
+						powerUp = ((Brick) map[row][col]).getPowerUp();
+						if (powerUp < .1) {
+							map[row][col] = new Speedup(row * BLOCK_SIZE, col
+									* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+									COURT_HEIGHT);
+						} else if (powerUp < .2) {
+							map[row][col] = new Fire(row * BLOCK_SIZE, col
+									* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+									COURT_HEIGHT);
+						} else if (powerUp < .35) {
+							map[row][col] = new Bombup(row * BLOCK_SIZE, col
+									* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+									COURT_HEIGHT);
+						} else {
+							map[row][col] = new Grass(row * BLOCK_SIZE, col
+									* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+									COURT_HEIGHT);
+						}
+					} else if (map[row][col] instanceof Bombup
+							|| map[row][col] instanceof Fire
+							|| map[row][col] instanceof Speedup) {
+						if (((PowerUp) (map[row][col])).isUsed()) {
+							map[row][col] = new Grass(row * BLOCK_SIZE, col
+									* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+									COURT_HEIGHT);
+						}
+					} else if ((map[row][col] instanceof Bomb || map[row][col] instanceof Player)
 							&& map[row][col].isBlown()) {
 						map[row][col] = new Grass(row * BLOCK_SIZE, col
 								* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
@@ -244,13 +259,14 @@ public class GameCourt extends JPanel {
 					}
 				}
 			}
+			// If a player has been blown, reset him to his original position
 			if (p1.isBlown()) {
 				p1.reset(this);
 			}
 			if (p2.isBlown()) {
 				p2.reset(this);
 			}
-
+			// Move players
 			p1.move(this);
 			p2.move(this);
 

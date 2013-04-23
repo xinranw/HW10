@@ -7,25 +7,29 @@ import java.util.*;
 import javax.imageio.ImageIO;
 
 public class Player extends GameObj {
-	private int v;
-
+	// Original position of the player, used for resetting
 	private final int ORIGINAL_PX;
 	private final int ORIGINAL_PY;
 
-	private BufferedImage spriteMap;
-	private BufferedImage spriteImg;
+	private BufferedImage spriteMap, spriteImg;
 
 	private Set<Direction> dirs = new TreeSet<Direction>();
 	private Direction playerDir;
-	public Boolean placedBomb;
+	private Boolean placedBomb;
+	private int rad, bombs, speed;
+	private int deaths = 0, kills = 0;
 
-	public Player(int p_x, int p_y, int width, int height, int courtWidth, int courtHeight,
-			Direction dir, String file) {
+	// Initiates new player, sets default values and displays its sprite
+	public Player(int p_x, int p_y, int width, int height, int courtWidth,
+			int courtHeight, Direction dir, String file) {
 		super(0, 0, p_x, p_y, width, height, courtWidth, courtHeight);
 		ORIGINAL_PX = p_x;
 		ORIGINAL_PY = p_y;
 		playerDir = dir;
 		placedBomb = false;
+		rad = 1;
+		bombs = 1;
+		speed = 4;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
@@ -41,6 +45,7 @@ public class Player extends GameObj {
 		g.drawImage(spriteImg, pos_x, pos_y, width, height, null);
 	}
 
+	// Sets the sprite based on its direction
 	public BufferedImage setSprite(Direction direction) {
 		switch (direction) {
 		case LEFT:
@@ -103,39 +108,46 @@ public class Player extends GameObj {
 	public void move(GameCourt gameCourt) {
 		GameObj currObj = null;
 		GameObj nextObj = null;
+		GameObj[][] map = gameCourt.getMap();
 		// Checks for hitting a wall
 		if (hitWall() != null) {
 			dirs.add(hitWall());
 		}
 
+		/*
+		 * Uses the placedBomb boolean to determine when a player has moved away
+		 * from the bomb he just placed. If there is a bomb in the direction he
+		 * is going, trap him and stop him from moving
+		 */
+
+		if (v_x < 0) {
+			currObj = map[(pos_x + width) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
+					/ gameCourt.BLOCK_SIZE];
+			nextObj = map[Math.max(0, (pos_x + width) / gameCourt.BLOCK_SIZE
+					- 1)][(pos_y + height / 2) / gameCourt.BLOCK_SIZE];
+		} else if (v_x > 0) {
+			currObj = map[(pos_x) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
+					/ gameCourt.BLOCK_SIZE];
+			nextObj = map[Math.min(gameCourt.HOR_BLOCKS - 1, (pos_x)
+					/ gameCourt.BLOCK_SIZE + 1)][(pos_y + height / 2)
+					/ gameCourt.BLOCK_SIZE];
+		} else if (v_y < 0) {
+			currObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][(pos_y + height)
+					/ gameCourt.BLOCK_SIZE];
+			nextObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][Math.max(
+					0, (pos_y + height) / gameCourt.BLOCK_SIZE - 1)];
+		} else if (v_y > 0) {
+			currObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][(pos_y)
+					/ gameCourt.BLOCK_SIZE];
+			nextObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][Math.min(
+					gameCourt.VER_BLOCKS - 1, (pos_y) / gameCourt.BLOCK_SIZE
+							+ 1)];
+		}
+		if (nextObj instanceof PowerUp) {
+			((PowerUp) nextObj).used();
+			((PowerUp) nextObj).gain(this);
+		}
 		if (placedBomb) {
-			if (v_x < 0) {
-				currObj = gameCourt.getMap()[(pos_x + width)
-						/ gameCourt.BLOCK_SIZE][(pos_y + height / 2)
-						/ gameCourt.BLOCK_SIZE];
-				nextObj = gameCourt.getMap()[Math.max(0, (pos_x + width)
-						/ gameCourt.BLOCK_SIZE - 1)][(pos_y + height / 2)
-						/ gameCourt.BLOCK_SIZE];
-			} else if (v_x > 0) {
-				currObj = gameCourt.getMap()[(pos_x) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
-						/ gameCourt.BLOCK_SIZE];
-				nextObj = gameCourt.getMap()[Math.min(gameCourt.HOR_BLOCKS,
-						(pos_x) / gameCourt.BLOCK_SIZE + 1)][(pos_y + height / 2)
-						/ gameCourt.BLOCK_SIZE];
-			} else if (v_y < 0) {
-				currObj = gameCourt.getMap()[(pos_x + width / 2)
-						/ gameCourt.BLOCK_SIZE][(pos_y + height)
-						/ gameCourt.BLOCK_SIZE];
-				nextObj = gameCourt.getMap()[(pos_x + width / 2)
-						/ gameCourt.BLOCK_SIZE][Math.max(0, (pos_y + height)
-						/ gameCourt.BLOCK_SIZE - 1)];
-			} else if (v_y > 0) {
-				currObj = gameCourt.getMap()[(pos_x + width / 2)
-						/ gameCourt.BLOCK_SIZE][(pos_y) / gameCourt.BLOCK_SIZE];
-				nextObj = gameCourt.getMap()[(pos_x + width / 2)
-						/ gameCourt.BLOCK_SIZE][Math.min(gameCourt.VER_BLOCKS,
-						(pos_y) / gameCourt.BLOCK_SIZE + 1)];
-			}
 			if (nextObj instanceof Bomb) {
 				dirs.add(Direction.UP);
 				dirs.add(Direction.DOWN);
@@ -153,8 +165,7 @@ public class Player extends GameObj {
 			for (int col = Math.max(0, pos_y / gameCourt.BLOCK_SIZE - 1); col <= Math
 					.min(pos_y / gameCourt.BLOCK_SIZE + 1,
 							gameCourt.VER_BLOCKS - 1); col++) {
-				currObj = gameCourt.getMap()[row][col];
-
+				currObj = map[row][col];
 				if ((currObj instanceof Wall || currObj instanceof Brick || (currObj instanceof Bomb && !placedBomb))
 						&& willIntersect(currObj)) {
 					dirs.addAll(willIntersectDir(currObj));
@@ -175,26 +186,72 @@ public class Player extends GameObj {
 		if (dirs.contains(Direction.DOWN)) {
 			v_y = Math.min(0, v_y);
 		}
+
 		move();
 		dirs.clear();
 	}
 
+	// Places a bomb at the player's current location and associates the bomb to
+	// the player as its owner
 	public void bomb(GameObj[][] map, int blockSize, int interval) {
-		int row = (int) Math.round(pos_x / (double) blockSize);
-		int col = (int) Math.round(pos_y / (double) blockSize);
+		int row = 0, col = 0;
+		if (v_x < 0) {
+			row = (pos_x + width) / blockSize;
+		} else if (v_x > 0) {
+			row = pos_x / blockSize;
+		} else if (v_x == 0) {
+			row = (pos_x + width / 2) / blockSize;
+		}
+		if (v_y < 0) {
+			col = (pos_y + height) / blockSize;
+		} else if (v_y > 0) {
+			col = pos_y / blockSize;
+		} else if (v_y == 0) {
+			col = (pos_y + height / 2) / blockSize;
+		}
 		if (!(map[row][col] instanceof Bomb)) {
 			map[row][col] = new Bomb(row * blockSize, col * blockSize,
 					blockSize, map.length * blockSize, map[0].length
-							* blockSize, interval, this);
+							* blockSize, interval, rad, this);
 			placedBomb = true;
 		}
 	}
 
+	public void gainKill() {
+		kills++;
+	}
+
+	public int getKills() {
+		return kills;
+	}
+
+	public int getDeaths() {
+		return deaths;
+	}
+
+	public void increaseRad() {
+		rad = Math.min(6, rad + 1);
+	}
+
+	public void increaseBombs() {
+		bombs = Math.min(6, bombs + 1);
+	}
+
+	public void increaseSpeed() {
+		speed = Math.min(4, speed + 1);
+	}
+
+	public int getSpeed() {
+		return speed;
+	}
+
+	// Reset the player after death
 	public void reset(GameCourt gameCourt) {
 		this.pos_x = ORIGINAL_PX;
 		this.pos_y = ORIGINAL_PY;
 		dirs.clear();
 		isBlown = false;
 		placedBomb = false;
+		deaths++;
 	}
 }
