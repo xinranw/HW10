@@ -28,30 +28,29 @@ public class Game implements Runnable {
 		// Status panel
 		final JPanel status_panel = new JPanel();
 		frame.add(status_panel, BorderLayout.SOUTH);
-		final JLabel status = new JLabel("Running...");
-		status_panel.add(status);
+		status_panel.setLayout(new BoxLayout(status_panel, BoxLayout.X_AXIS));
+		final JLabel statusP1 = new JLabel("Player 1", JLabel.LEFT);
+		final JLabel statusP2 = new JLabel("Player 2", JLabel.RIGHT);
+		final JLabel gameStatus = new JLabel("Game Status", JLabel.CENTER);
+		status_panel.add(statusP1);
+		status_panel.add(new JSeparator());
+		status_panel.add(gameStatus);
+		status_panel.add(new JSeparator());
+		status_panel.add(statusP2);
 
 		// Main playing area
-		final GameCourt court = new GameCourt(status);
+		final GameCourt court = new GameCourt(statusP1, statusP2, gameStatus);
 		frame.add(court, BorderLayout.CENTER);
 
 		// Reset button
 		final JPanel control_panel = new JPanel();
 		frame.add(control_panel, BorderLayout.NORTH);
-
-		// Note here that when we add an action listener to the reset
-		// button, we define it as an anonymous inner class that is
-		// an instance of ActionListener with its actionPerformed()
-		// method overridden. When the button is pressed,
-		// actionPerformed() will be called.
 		final JButton reset = new JButton("Reset");
 		reset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				court.reset();
 			}
 		});
-		control_panel.add(reset);
-
 		JButton help = new JButton("Help");
 		help.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -61,8 +60,8 @@ public class Game implements Runnable {
 				try {
 					helpPane.setPage(helpFile.toURI().toURL());
 					helpPane.setEditable(false);
-					helpPane.setPreferredSize(new Dimension(600, 400));
-					helpFrame.setLocation(700, 300);
+					helpPane.setPreferredSize(new Dimension(300, 400));
+					helpFrame.setLocation(900, 100);
 					helpFrame.add(helpPane);
 					helpFrame.pack();
 					helpFrame.setVisible(true);
@@ -72,6 +71,7 @@ public class Game implements Runnable {
 				}
 			}
 		});
+		control_panel.add(reset);
 		control_panel.add(help);
 
 		// Put the frame on the screen

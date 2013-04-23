@@ -29,7 +29,7 @@ public class Player extends GameObj {
 		placedBomb = false;
 		rad = 1;
 		bombs = 1;
-		speed = 4;
+		speed = 1;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
@@ -244,7 +244,7 @@ public class Player extends GameObj {
 	public int getSpeed() {
 		return speed;
 	}
-
+	
 	// Reset the player after death
 	public void reset(GameCourt gameCourt) {
 		this.pos_x = ORIGINAL_PX;

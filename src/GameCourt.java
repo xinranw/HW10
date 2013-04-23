@@ -30,11 +30,13 @@ public class GameCourt extends JPanel {
 	private GameObj[][] map;
 
 	public boolean playing = false; // whether the game is running
-	private JLabel status; // Current status text (i.e. Running...)
+	private JLabel statusP1; // Current status text (i.e. Running...)
+	private JLabel statusP2; 
+	private JLabel gameStatus;
 
 	// Game constants
-	public static final int COURT_WIDTH = 570;
-	public static final int COURT_HEIGHT = 390;
+	public static final int COURT_WIDTH = 690;
+	public static final int COURT_HEIGHT = 450;
 	public static final int BLOCK_SIZE = 30;
 	public static final int HOR_BLOCKS = COURT_WIDTH / BLOCK_SIZE;
 	public static final int VER_BLOCKS = COURT_HEIGHT / BLOCK_SIZE;
@@ -42,7 +44,7 @@ public class GameCourt extends JPanel {
 	// Update interval for timer in milliseconds
 	private static final int INTERVAL = 35;
 
-	public GameCourt(JLabel status) {
+	public GameCourt(JLabel statusP1, JLabel statusP2, JLabel gameStatus) {
 		// creates border around the court area, JComponent method
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -148,7 +150,9 @@ public class GameCourt extends JPanel {
 			}
 		});
 
-		this.status = status;
+		this.statusP1 = statusP1;
+		this.statusP2 = statusP2;
+		this.gameStatus = gameStatus;
 	}
 
 	/**
@@ -189,7 +193,11 @@ public class GameCourt extends JPanel {
 		players.add(p2);
 
 		playing = true;
-		status.setText("Running...");
+		statusP1.setText("");
+		statusP1.setAlignmentX(LEFT_ALIGNMENT);
+		statusP2.setText("");
+		statusP2.setAlignmentX(RIGHT_ALIGNMENT);
+		gameStatus.setText("Running...");
 
 		// Make sure that this component has the keyboard focus
 		requestFocusInWindow();
@@ -202,8 +210,7 @@ public class GameCourt extends JPanel {
 	void tick() {
 		double powerUp = 0;
 		if (playing) {
-			status.setText("Player 1: Kills " + p1.getKills() + "Deaths"
-					+ p1.getDeaths());
+			
 			// Countdown for bombs. If the bomb timer reaches 0, it blows
 			for (int row = 0; row < HOR_BLOCKS; row++) {
 				for (int col = 0; col < VER_BLOCKS; col++) {
@@ -270,6 +277,19 @@ public class GameCourt extends JPanel {
 			p1.move(this);
 			p2.move(this);
 
+			statusP1.setText("Player 1: Kills " + p1.getKills() + ", Deaths "
+					+ p1.getDeaths());
+			statusP2.setText("Player 2: Kills " + p2.getKills() + ", Deaths "
+					+ p2.getDeaths());
+			
+			if (p1.getKills() >= 5 || p2.getDeaths() >= 5) { 
+				playing = false;
+				gameStatus.setText("Game Over - P1 Wins!");
+			} if (p2.getKills() >= 5 || p1.getDeaths() >= 5) {
+				playing = false;
+				gameStatus.setText("Game Over - P2 Wins!");
+			}
+			
 			// update the display
 			repaint();
 		}
