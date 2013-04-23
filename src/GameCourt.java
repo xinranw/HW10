@@ -107,21 +107,45 @@ public class GameCourt extends JPanel {
 			}
 
 			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_D
-						|| e.getKeyCode() == KeyEvent.VK_A) {
-					p1.v_x = 0;
+				if (e.getKeyCode() == KeyEvent.VK_D) {
+					if (p1.v_x >= 0){
+						p1.v_x = 0;
+					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_S
-						|| e.getKeyCode() == KeyEvent.VK_W) {
-					p1.v_y = 0;
+				if (e.getKeyCode() == KeyEvent.VK_A){
+					if (p1.v_x <= 0){
+						p1.v_x = 0;
+					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT
-						|| e.getKeyCode() == KeyEvent.VK_LEFT) {
-					p2.v_x = 0;
+				if (e.getKeyCode() == KeyEvent.VK_S) {
+					if (p1.v_y >= 0){
+						p1.v_y = 0;
+					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_DOWN
-						|| e.getKeyCode() == KeyEvent.VK_UP) {
-					p2.v_y = 0;
+				if (e.getKeyCode() == KeyEvent.VK_W){
+					if (p1.v_y <= 0){
+						p1.v_y = 0;
+					}
+				}
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+					if (p2.v_x >= 0){
+						p2.v_x = 0;
+					}
+				}
+				if (e.getKeyCode() == KeyEvent.VK_LEFT){
+					if (p2.v_x <= 0){
+						p2.v_x = 0;
+					}
+				}
+				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+					if (p2.v_y >= 0){
+						p2.v_y = 0;
+					}
+				}
+				if (e.getKeyCode() == KeyEvent.VK_UP){
+					if (p2.v_y <= 0){
+						p2.v_y = 0;
+					}
 				}
 			}
 		});
@@ -163,8 +187,8 @@ public class GameCourt extends JPanel {
 
 		p1 = new Player(1, 1, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT,
 				Sprite.RIGHT, "bombermanSprites.png");
-		p2 = new Player(COURT_WIDTH - BLOCK_SIZE - 1, COURT_HEIGHT - BLOCK_SIZE
-				- 1, BLOCK_SIZE - 1, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
+		p2 = new Player(COURT_WIDTH - BLOCK_SIZE + 2, COURT_HEIGHT - BLOCK_SIZE
+				+ 2, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
 				"bombermanSprites.png");
 
 		playing = true;
@@ -179,8 +203,6 @@ public class GameCourt extends JPanel {
 	 * triggers.
 	 */
 	void tick() {
-		Set<Direction> p1_dir = new TreeSet<Direction>();
-		Set<Direction> p2_dir = new TreeSet<Direction>();
 
 		if (playing) {
 			// advance the square and snitch in their
@@ -202,66 +224,10 @@ public class GameCourt extends JPanel {
 				status.setText("You win!");
 			}
 
-			status.setText("Running..." + p1.v_x + ", " + p1.v_y);
+			status.setText("Running..." + p2.pos_x + ", " + p2.pos_y +", " + p2.v_x + ", " + p2.v_y);
 
-			if (p1.hitWall() != null) {
-				p1_dir.add(p1.hitWall());
-			}
-			if (p2.hitWall() != null) {
-				p2_dir.add(p2.hitWall());
-			}
-			for (int row = Math.max(0, p1.pos_x / BLOCK_SIZE - 1); row <= Math
-					.min(p1.pos_x / BLOCK_SIZE + 1, HOR_BLOCKS - 1); row++) {
-				for (int col = Math.max(0, p1.pos_y / BLOCK_SIZE - 1); col <= Math
-						.min(p1.pos_y / BLOCK_SIZE + 1, VER_BLOCKS - 1); col++) {
-					if ((map[row][col] instanceof Wall || map[row][col] instanceof Brick)
-							&& p1.willIntersect(map[row][col])) {
-						p1_dir.addAll(p1.willIntersectDir(map[row][col]));
-						System.out.println(row + ", " + col);
-					}
-				}
-			}
-			if (p1_dir.contains(Direction.LEFT)) {
-				p1.v_x = Math.max(0, p1.v_x);
-			}
-			if (p1_dir.contains(Direction.RIGHT)) {
-				p1.v_x = Math.min(0, p1.v_x);
-			}
-			if (p1_dir.contains(Direction.UP)) {
-				p1.v_y = Math.max(0, p1.v_y);
-			}
-			if (p1_dir.contains(Direction.DOWN)) {
-				p1.v_y = Math.min(0, p1.v_y);
-			}
-			
-			for (int row = Math.max(0, p2.pos_x / BLOCK_SIZE - 1); row <= Math
-					.min(p2.pos_x / BLOCK_SIZE + 1, HOR_BLOCKS - 1); row++) {
-				for (int col = Math.max(0, p2.pos_y / BLOCK_SIZE - 1); col <= Math
-						.min(p2.pos_y / BLOCK_SIZE + 1, VER_BLOCKS - 1); col++) {
-					if ((map[row][col] instanceof Wall || map[row][col] instanceof Brick)
-							&& p2.willIntersect(map[row][col])) {
-						p2_dir.addAll(p2.willIntersectDir(map[row][col]));
-						System.out.println(row + ", " + col);
-					}
-				}
-			}
-			if (p2_dir.contains(Direction.LEFT)) {
-				p2.v_x = Math.max(0, p2.v_x);
-			}
-			if (p2_dir.contains(Direction.RIGHT)) {
-				p2.v_x = Math.min(0, p2.v_x);
-			}
-			if (p2_dir.contains(Direction.UP)) {
-				p2.v_y = Math.max(0, p2.v_y);
-			}
-			if (p2_dir.contains(Direction.DOWN)) {
-				p2.v_y = Math.min(0, p2.v_y);
-			}
-			p1_dir.clear();
-			p2_dir.clear();
-
-			p1.move();
-			p2.move();
+			p1.move(this);
+			p2.move(this);
 
 			// update the display
 			repaint();
@@ -286,5 +252,9 @@ public class GameCourt extends JPanel {
 	@Override
 	public Dimension getPreferredSize() {
 		return new Dimension(COURT_WIDTH, COURT_HEIGHT);
+	}
+
+	public GameObj[][] getMap() {
+		return map;
 	}
 }
