@@ -29,7 +29,6 @@ public class GameCourt extends JPanel {
 	private Player p1;
 	private Player p2;
 	private Set<Player> players = new HashSet<Player>();
-	
 
 	private GameObj[][] map;
 
@@ -77,29 +76,29 @@ public class GameCourt extends JPanel {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_A) {
 					p1.v_x = -PLAYER_VELOCITY;
-					p1.setSprite(Sprite.LEFT);
+					p1.setSprite(Direction.LEFT);
 				} else if (e.getKeyCode() == KeyEvent.VK_D) {
 					p1.v_x = PLAYER_VELOCITY;
-					p1.setSprite(Sprite.RIGHT);
+					p1.setSprite(Direction.RIGHT);
 				} else if (e.getKeyCode() == KeyEvent.VK_S) {
 					p1.v_y = PLAYER_VELOCITY;
-					p1.setSprite(Sprite.DOWN);
+					p1.setSprite(Direction.DOWN);
 				} else if (e.getKeyCode() == KeyEvent.VK_W) {
 					p1.v_y = -PLAYER_VELOCITY;
-					p1.setSprite(Sprite.UP);
+					p1.setSprite(Direction.UP);
 				}
 				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 					p2.v_x = -PLAYER_VELOCITY;
-					p2.setSprite(Sprite.LEFT);
+					p2.setSprite(Direction.LEFT);
 				} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
 					p2.v_x = PLAYER_VELOCITY;
-					p2.setSprite(Sprite.RIGHT);
+					p2.setSprite(Direction.RIGHT);
 				} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 					p2.v_y = PLAYER_VELOCITY;
-					p2.setSprite(Sprite.DOWN);
+					p2.setSprite(Direction.DOWN);
 				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
 					p2.v_y = -PLAYER_VELOCITY;
-					p2.setSprite(Sprite.UP);
+					p2.setSprite(Direction.UP);
 				}
 
 				if (e.getKeyCode() == KeyEvent.VK_F) {
@@ -165,7 +164,7 @@ public class GameCourt extends JPanel {
 		square = new Square(COURT_WIDTH, COURT_HEIGHT);
 		poison = new Poison(COURT_WIDTH, COURT_HEIGHT);
 		snitch = new Circle(COURT_WIDTH, COURT_HEIGHT);
-		
+
 		map = new GameObj[HOR_BLOCKS][VER_BLOCKS];
 
 		// Populate map with grass, bricks, or walls
@@ -189,13 +188,13 @@ public class GameCourt extends JPanel {
 				}
 			}
 		}
-
-		p1 = new Player(1, 1, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT,
-				Sprite.RIGHT, "bombermanSprites.png");
+		// Add players
+		p1 = new Player(1, 1, BLOCK_SIZE - 6, BLOCK_SIZE - 5, COURT_WIDTH,
+				COURT_HEIGHT, Direction.RIGHT, "bombermanSprites.png");
 		p2 = new Player(COURT_WIDTH - BLOCK_SIZE + 2, COURT_HEIGHT - BLOCK_SIZE
-				+ 2, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
-				"bombermanSprites.png");
-		
+				+ 2, BLOCK_SIZE - 6, BLOCK_SIZE - 5, COURT_WIDTH, COURT_HEIGHT,
+				Direction.LEFT, "bombermanSprites.png");
+
 		players.add(p1);
 		players.add(p2);
 
@@ -213,16 +212,6 @@ public class GameCourt extends JPanel {
 	void tick() {
 
 		if (playing) {
-			// advance the square and snitch in their
-			// current direction.
-			square.move();
-			snitch.move();
-
-			// make the snitch bounce off walls...
-			snitch.bounce(snitch.hitWall());
-			// ...and the mushroom
-			snitch.bounce(snitch.hitObj(poison));
-
 			// check for the game end conditions
 			if (square.intersects(poison)) {
 				playing = false;
@@ -232,8 +221,7 @@ public class GameCourt extends JPanel {
 				status.setText("You win!");
 			}
 
-			status.setText("Running..." + p1.pos_x + ", " + p1.pos_y + ", "
-					+ p1.v_x + ", " + p1.v_y);
+			status.setText("Running...");
 			for (int row = 0; row < HOR_BLOCKS; row++) {
 				for (int col = 0; col < VER_BLOCKS; col++) {
 					if (map[row][col] instanceof Bomb) {
@@ -256,10 +244,10 @@ public class GameCourt extends JPanel {
 					}
 				}
 			}
-			if (p1.isBlown()){
+			if (p1.isBlown()) {
 				p1.reset(this);
 			}
-			if (p2.isBlown()){
+			if (p2.isBlown()) {
 				p2.reset(this);
 			}
 
@@ -274,9 +262,6 @@ public class GameCourt extends JPanel {
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		square.draw(g);
-		poison.draw(g);
-		snitch.draw(g);
 		for (int row = 0; row < HOR_BLOCKS; row++) {
 			for (int col = 0; col < VER_BLOCKS; col++) {
 				map[row][col].draw(g);
@@ -294,8 +279,8 @@ public class GameCourt extends JPanel {
 	public GameObj[][] getMap() {
 		return map;
 	}
-	
-	public Set<Player> getPlayers(){
+
+	public Set<Player> getPlayers() {
 		return players;
 	}
 }

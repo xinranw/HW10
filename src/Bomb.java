@@ -18,7 +18,7 @@ public class Bomb extends GameObj {
 	public Bomb(int p_x, int p_y, int size, int courtWidth, int courtHeight,
 			int interval, Player p) {
 		super(VEL_X, VEL_Y, p_x, p_y, size, size, courtWidth, courtHeight);
-		timer = 2500 / interval;
+		timer = 3000 / interval;
 		owner = p;
 		try {
 			if (img == null) {

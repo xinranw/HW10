@@ -15,19 +15,22 @@ public class Player extends GameObj {
 	private BufferedImage spriteMap;
 	private BufferedImage spriteImg;
 
-	private Boolean placedBomb;
+	private Set<Direction> dirs = new TreeSet<Direction>();
+	private Direction playerDir;
+	public Boolean placedBomb;
 
-	public Player(int p_x, int p_y, int size, int courtWidth, int courtHeight,
-			Sprite sprite, String file) {
-		super(0, 0, p_x, p_y, size, size, courtWidth, courtHeight);
+	public Player(int p_x, int p_y, int width, int height, int courtWidth, int courtHeight,
+			Direction dir, String file) {
+		super(0, 0, p_x, p_y, width, height, courtWidth, courtHeight);
 		ORIGINAL_PX = p_x;
 		ORIGINAL_PY = p_y;
+		playerDir = dir;
 		placedBomb = false;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
 			}
-			spriteImg = setSprite(sprite);
+			spriteImg = setSprite(dir);
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());
 		}
@@ -38,8 +41,8 @@ public class Player extends GameObj {
 		g.drawImage(spriteImg, pos_x, pos_y, width, height, null);
 	}
 
-	public BufferedImage setSprite(Sprite sprite) {
-		switch (sprite) {
+	public BufferedImage setSprite(Direction direction) {
+		switch (direction) {
 		case LEFT:
 			spriteImg = spriteMap.getSubimage(32, 0, 20, 20);
 			break;
@@ -53,6 +56,7 @@ public class Player extends GameObj {
 			spriteImg = spriteMap.getSubimage(2, 0, 20, 20);
 			break;
 		}
+		playerDir = direction;
 		return spriteImg;
 	}
 
@@ -87,9 +91,9 @@ public class Player extends GameObj {
 			}
 		} else if (v_y < 0) {
 			if (next_y + height >= next_obj_y) {
-				directions.add(Direction.DOWN);
-			} else if (next_obj_y + obj.height >= next_y) {
 				directions.add(Direction.UP);
+			} else if (next_obj_y + obj.height >= next_y) {
+				directions.add(Direction.DOWN);
 			}
 		}
 		return directions;
@@ -97,26 +101,67 @@ public class Player extends GameObj {
 
 	// A new move method that accounts for collisions with certain game objects
 	public void move(GameCourt gameCourt) {
-		// Set to contain all possible directions of collision
-		Set<Direction> dirs = new TreeSet<Direction>();
-		GameObj obj;
+		GameObj currObj = null;
+		GameObj nextObj = null;
 		// Checks for hitting a wall
 		if (hitWall() != null) {
 			dirs.add(hitWall());
 		}
+
+		if (placedBomb) {
+			if (v_x < 0) {
+				currObj = gameCourt.getMap()[(pos_x + width)
+						/ gameCourt.BLOCK_SIZE][(pos_y + height / 2)
+						/ gameCourt.BLOCK_SIZE];
+				nextObj = gameCourt.getMap()[Math.max(0, (pos_x + width)
+						/ gameCourt.BLOCK_SIZE - 1)][(pos_y + height / 2)
+						/ gameCourt.BLOCK_SIZE];
+			} else if (v_x > 0) {
+				currObj = gameCourt.getMap()[(pos_x) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
+						/ gameCourt.BLOCK_SIZE];
+				nextObj = gameCourt.getMap()[Math.min(gameCourt.HOR_BLOCKS,
+						(pos_x) / gameCourt.BLOCK_SIZE + 1)][(pos_y + height / 2)
+						/ gameCourt.BLOCK_SIZE];
+			} else if (v_y < 0) {
+				currObj = gameCourt.getMap()[(pos_x + width / 2)
+						/ gameCourt.BLOCK_SIZE][(pos_y + height)
+						/ gameCourt.BLOCK_SIZE];
+				nextObj = gameCourt.getMap()[(pos_x + width / 2)
+						/ gameCourt.BLOCK_SIZE][Math.max(0, (pos_y + height)
+						/ gameCourt.BLOCK_SIZE - 1)];
+			} else if (v_y > 0) {
+				currObj = gameCourt.getMap()[(pos_x + width / 2)
+						/ gameCourt.BLOCK_SIZE][(pos_y) / gameCourt.BLOCK_SIZE];
+				nextObj = gameCourt.getMap()[(pos_x + width / 2)
+						/ gameCourt.BLOCK_SIZE][Math.min(gameCourt.VER_BLOCKS,
+						(pos_y) / gameCourt.BLOCK_SIZE + 1)];
+			}
+			if (nextObj instanceof Bomb) {
+				dirs.add(Direction.UP);
+				dirs.add(Direction.DOWN);
+				dirs.add(Direction.LEFT);
+				dirs.add(Direction.RIGHT);
+			} else if (currObj != null && intersects(currObj)
+					&& !(currObj instanceof Bomb)) {
+				placedBomb = !placedBomb;
+			}
+		}
+
 		// Iterates through nearby blocks to check for directions of collision
 		for (int row = Math.max(0, pos_x / gameCourt.BLOCK_SIZE - 1); row <= Math
 				.min(pos_x / gameCourt.BLOCK_SIZE + 1, gameCourt.HOR_BLOCKS - 1); row++) {
 			for (int col = Math.max(0, pos_y / gameCourt.BLOCK_SIZE - 1); col <= Math
 					.min(pos_y / gameCourt.BLOCK_SIZE + 1,
 							gameCourt.VER_BLOCKS - 1); col++) {
-				obj = gameCourt.getMap()[row][col];
-				if ((obj instanceof Wall || obj instanceof Brick)
-						&& willIntersect(obj)) {
-					dirs.addAll(willIntersectDir(obj));
+				currObj = gameCourt.getMap()[row][col];
+
+				if ((currObj instanceof Wall || currObj instanceof Brick || (currObj instanceof Bomb && !placedBomb))
+						&& willIntersect(currObj)) {
+					dirs.addAll(willIntersectDir(currObj));
 				}
 			}
 		}
+
 		// Adjusts velocity if there will be a collision in that direction
 		if (dirs.contains(Direction.LEFT)) {
 			v_x = Math.max(0, v_x);
@@ -131,6 +176,7 @@ public class Player extends GameObj {
 			v_y = Math.min(0, v_y);
 		}
 		move();
+		dirs.clear();
 	}
 
 	public void bomb(GameObj[][] map, int blockSize, int interval) {
@@ -147,7 +193,8 @@ public class Player extends GameObj {
 	public void reset(GameCourt gameCourt) {
 		this.pos_x = ORIGINAL_PX;
 		this.pos_y = ORIGINAL_PY;
-		
+		dirs.clear();
+		isBlown = false;
 		placedBomb = false;
 	}
 }
