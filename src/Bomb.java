@@ -6,25 +6,75 @@ import javax.imageio.ImageIO;
 
 public class Bomb extends GameObj {
 
-	public static final String img_file = "bombermanSprites.png";
+	private String img_file = "bombermanSprites.png";
 	public static final int VEL_X = 0;
 	public static final int VEL_Y = 0;
 
 	private static BufferedImage img;
+	public int timer;
+	private int rad = 1;
+	private Player owner;
 
-	public Bomb(int p_x, int p_y, int size, int courtWidth, int courtHeight) {
+	public Bomb(int p_x, int p_y, int size, int courtWidth, int courtHeight,
+			int interval, Player p) {
 		super(VEL_X, VEL_Y, p_x, p_y, size, size, courtWidth, courtHeight);
+		timer = 2500 / interval;
+		owner = p;
 		try {
 			if (img == null) {
-				img = ImageIO.read(new File(img_file)).getSubimage(243,90,20,20);
+				img = ImageIO.read(new File(img_file)).getSubimage(243, 90, 20,
+						20);
 			}
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());
 		}
 	}
-	
+
 	@Override
-	public void draw(Graphics g){
-		 g.drawImage(img, pos_x, pos_y, width, height, null); 
+	public void draw(Graphics g) {
+		g.drawImage(img, pos_x, pos_y, width, height, null);
+	}
+
+	public void countdown() {
+		timer--;
+	}
+
+	public int time() {
+		return timer;
+	}
+
+	public void blow(GameCourt gameCourt) {
+		GameObj obj;
+		isBlown = true;
+		for (int row = Math.max(0, pos_x / gameCourt.BLOCK_SIZE - rad); row <= Math
+				.min(pos_x / gameCourt.BLOCK_SIZE + rad,
+						gameCourt.HOR_BLOCKS - 1); row++) {
+			for (int col = Math.max(0, pos_y / gameCourt.BLOCK_SIZE - rad); col <= Math
+					.min(pos_y / gameCourt.BLOCK_SIZE + rad,
+							gameCourt.VER_BLOCKS - 1); col++) {
+				// Check for blowing up players
+				if (row == pos_x / gameCourt.BLOCK_SIZE
+						|| col == pos_y / gameCourt.BLOCK_SIZE) {
+					for (Player p : gameCourt.getPlayers()) {
+						if (gameCourt.getMap()[row][col].intersects(p)) {
+							p.blown();
+						}
+					}
+				}
+				// Check for blowing up bricks and other bombs
+				if (row == pos_x / gameCourt.BLOCK_SIZE
+						&& col == pos_y / gameCourt.BLOCK_SIZE) {
+					continue;
+				} else if (row == pos_x / gameCourt.BLOCK_SIZE
+						|| col == pos_y / gameCourt.BLOCK_SIZE) {
+					obj = gameCourt.getMap()[row][col];
+					if ((obj instanceof Brick) && !obj.isBlown()) {
+						obj.blown();
+					} else if (obj instanceof Bomb && !obj.isBlown()) {
+						((Bomb) obj).blow(gameCourt);
+					}
+				}
+			}
+		}
 	}
 }

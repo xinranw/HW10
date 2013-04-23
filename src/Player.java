@@ -1,5 +1,4 @@
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -8,15 +7,22 @@ import java.util.*;
 import javax.imageio.ImageIO;
 
 public class Player extends GameObj {
-	public static final int VEL_X = 0;
-	public static final int VEL_Y = 0;
+	private int v;
+
+	private final int ORIGINAL_PX;
+	private final int ORIGINAL_PY;
 
 	private BufferedImage spriteMap;
 	private BufferedImage spriteImg;
 
+	private Boolean placedBomb;
+
 	public Player(int p_x, int p_y, int size, int courtWidth, int courtHeight,
 			Sprite sprite, String file) {
-		super(VEL_X, VEL_Y, p_x, p_y, size, size, courtWidth, courtHeight);
+		super(0, 0, p_x, p_y, size, size, courtWidth, courtHeight);
+		ORIGINAL_PX = p_x;
+		ORIGINAL_PY = p_y;
+		placedBomb = false;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
@@ -125,5 +131,23 @@ public class Player extends GameObj {
 			v_y = Math.min(0, v_y);
 		}
 		move();
+	}
+
+	public void bomb(GameObj[][] map, int blockSize, int interval) {
+		int row = (int) Math.round(pos_x / (double) blockSize);
+		int col = (int) Math.round(pos_y / (double) blockSize);
+		if (!(map[row][col] instanceof Bomb)) {
+			map[row][col] = new Bomb(row * blockSize, col * blockSize,
+					blockSize, map.length * blockSize, map[0].length
+							* blockSize, interval, this);
+			placedBomb = true;
+		}
+	}
+
+	public void reset(GameCourt gameCourt) {
+		this.pos_x = ORIGINAL_PX;
+		this.pos_y = ORIGINAL_PY;
+		
+		placedBomb = false;
 	}
 }

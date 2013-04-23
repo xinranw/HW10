@@ -7,7 +7,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.HashSet;
+
 import javax.swing.*;
 
 /**
@@ -27,6 +28,8 @@ public class GameCourt extends JPanel {
 	private Poison poison; // the Poison Mushroom, doesn't move
 	private Player p1;
 	private Player p2;
+	private Set<Player> players = new HashSet<Player>();
+	
 
 	private GameObj[][] map;
 
@@ -99,51 +102,53 @@ public class GameCourt extends JPanel {
 					p2.setSprite(Sprite.UP);
 				}
 
-				/*
-				 * if (e.getKeyCode() == KeyEvent.VK_F){
-				 * 
-				 * }
-				 */
+				if (e.getKeyCode() == KeyEvent.VK_F) {
+					p1.bomb(map, BLOCK_SIZE, INTERVAL);
+				}
+				if (e.getKeyCode() == KeyEvent.VK_L) {
+					p2.bomb(map, BLOCK_SIZE, INTERVAL);
+				}
+
 			}
 
 			public void keyReleased(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_D) {
-					if (p1.v_x >= 0){
+					if (p1.v_x >= 0) {
 						p1.v_x = 0;
 					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_A){
-					if (p1.v_x <= 0){
+				if (e.getKeyCode() == KeyEvent.VK_A) {
+					if (p1.v_x <= 0) {
 						p1.v_x = 0;
 					}
 				}
 				if (e.getKeyCode() == KeyEvent.VK_S) {
-					if (p1.v_y >= 0){
+					if (p1.v_y >= 0) {
 						p1.v_y = 0;
 					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_W){
-					if (p1.v_y <= 0){
+				if (e.getKeyCode() == KeyEvent.VK_W) {
+					if (p1.v_y <= 0) {
 						p1.v_y = 0;
 					}
 				}
 				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					if (p2.v_x >= 0){
+					if (p2.v_x >= 0) {
 						p2.v_x = 0;
 					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_LEFT){
-					if (p2.v_x <= 0){
+				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+					if (p2.v_x <= 0) {
 						p2.v_x = 0;
 					}
 				}
 				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					if (p2.v_y >= 0){
+					if (p2.v_y >= 0) {
 						p2.v_y = 0;
 					}
 				}
-				if (e.getKeyCode() == KeyEvent.VK_UP){
-					if (p2.v_y <= 0){
+				if (e.getKeyCode() == KeyEvent.VK_UP) {
+					if (p2.v_y <= 0) {
 						p2.v_y = 0;
 					}
 				}
@@ -160,7 +165,7 @@ public class GameCourt extends JPanel {
 		square = new Square(COURT_WIDTH, COURT_HEIGHT);
 		poison = new Poison(COURT_WIDTH, COURT_HEIGHT);
 		snitch = new Circle(COURT_WIDTH, COURT_HEIGHT);
-
+		
 		map = new GameObj[HOR_BLOCKS][VER_BLOCKS];
 
 		// Populate map with grass, bricks, or walls
@@ -190,6 +195,9 @@ public class GameCourt extends JPanel {
 		p2 = new Player(COURT_WIDTH - BLOCK_SIZE + 2, COURT_HEIGHT - BLOCK_SIZE
 				+ 2, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
 				"bombermanSprites.png");
+		
+		players.add(p1);
+		players.add(p2);
 
 		playing = true;
 		status.setText("Running...");
@@ -224,7 +232,36 @@ public class GameCourt extends JPanel {
 				status.setText("You win!");
 			}
 
-			status.setText("Running..." + p2.pos_x + ", " + p2.pos_y +", " + p2.v_x + ", " + p2.v_y);
+			status.setText("Running..." + p1.pos_x + ", " + p1.pos_y + ", "
+					+ p1.v_x + ", " + p1.v_y);
+			for (int row = 0; row < HOR_BLOCKS; row++) {
+				for (int col = 0; col < VER_BLOCKS; col++) {
+					if (map[row][col] instanceof Bomb) {
+						Bomb b = (Bomb) map[row][col];
+						b.countdown();
+						if (b.time() <= 0) {
+							b.blow(this);
+						}
+					}
+				}
+			}
+			for (int row = 0; row < HOR_BLOCKS; row++) {
+				for (int col = 0; col < VER_BLOCKS; col++) {
+					if ((map[row][col] instanceof Bomb
+							|| map[row][col] instanceof Brick || map[row][col] instanceof Player)
+							&& map[row][col].isBlown()) {
+						map[row][col] = new Grass(row * BLOCK_SIZE, col
+								* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+								COURT_HEIGHT);
+					}
+				}
+			}
+			if (p1.isBlown()){
+				p1.reset(this);
+			}
+			if (p2.isBlown()){
+				p2.reset(this);
+			}
 
 			p1.move(this);
 			p2.move(this);
@@ -256,5 +293,9 @@ public class GameCourt extends JPanel {
 
 	public GameObj[][] getMap() {
 		return map;
+	}
+	
+	public Set<Player> getPlayers(){
+		return players;
 	}
 }

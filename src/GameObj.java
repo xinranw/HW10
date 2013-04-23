@@ -39,6 +39,7 @@ public class GameObj {
 	public int max_x;
 	public int max_y;
 
+	public Boolean isBlown = false;
 	/**
 	 * Constructor
 	 */
@@ -202,5 +203,14 @@ public class GameObj {
 	 */
 	public void draw(Graphics g) {
 	}
+	
+	public Boolean isBlown(){
+		return isBlown;
+	}
+	
+	public void blown(){
+		isBlown = true;
+	}
+	
 	
 }
