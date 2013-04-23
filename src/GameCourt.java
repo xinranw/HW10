@@ -6,8 +6,9 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.swing.*;
-import java.util.ArrayList;
 
 /**
  * GameCourt
@@ -83,7 +84,7 @@ public class GameCourt extends JPanel {
 				} else if (e.getKeyCode() == KeyEvent.VK_W) {
 					p1.v_y = -PLAYER_VELOCITY;
 					p1.setSprite(Sprite.UP);
-				}				
+				}
 				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 					p2.v_x = -PLAYER_VELOCITY;
 					p2.setSprite(Sprite.LEFT);
@@ -97,6 +98,12 @@ public class GameCourt extends JPanel {
 					p2.v_y = -PLAYER_VELOCITY;
 					p2.setSprite(Sprite.UP);
 				}
+
+				/*
+				 * if (e.getKeyCode() == KeyEvent.VK_F){
+				 * 
+				 * }
+				 */
 			}
 
 			public void keyReleased(KeyEvent e) {
@@ -154,10 +161,10 @@ public class GameCourt extends JPanel {
 			}
 		}
 
-		p1 = new Player(0, 0, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT,
+		p1 = new Player(1, 1, BLOCK_SIZE - 4, COURT_WIDTH, COURT_HEIGHT,
 				Sprite.RIGHT, "bombermanSprites.png");
 		p2 = new Player(COURT_WIDTH - BLOCK_SIZE - 1, COURT_HEIGHT - BLOCK_SIZE
-				- 2, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
+				- 1, BLOCK_SIZE - 1, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
 				"bombermanSprites.png");
 
 		playing = true;
@@ -172,13 +179,14 @@ public class GameCourt extends JPanel {
 	 * triggers.
 	 */
 	void tick() {
+		Set<Direction> p1_dir = new TreeSet<Direction>();
+		Set<Direction> p2_dir = new TreeSet<Direction>();
+
 		if (playing) {
 			// advance the square and snitch in their
 			// current direction.
 			square.move();
 			snitch.move();
-			p1.move();
-			p2.move();
 
 			// make the snitch bounce off walls...
 			snitch.bounce(snitch.hitWall());
@@ -189,11 +197,71 @@ public class GameCourt extends JPanel {
 			if (square.intersects(poison)) {
 				playing = false;
 				status.setText("You lose!");
-
 			} else if (square.intersects(snitch)) {
 				playing = false;
 				status.setText("You win!");
 			}
+
+			status.setText("Running..." + p1.v_x + ", " + p1.v_y);
+
+			if (p1.hitWall() != null) {
+				p1_dir.add(p1.hitWall());
+			}
+			if (p2.hitWall() != null) {
+				p2_dir.add(p2.hitWall());
+			}
+			for (int row = Math.max(0, p1.pos_x / BLOCK_SIZE - 1); row <= Math
+					.min(p1.pos_x / BLOCK_SIZE + 1, HOR_BLOCKS - 1); row++) {
+				for (int col = Math.max(0, p1.pos_y / BLOCK_SIZE - 1); col <= Math
+						.min(p1.pos_y / BLOCK_SIZE + 1, VER_BLOCKS - 1); col++) {
+					if ((map[row][col] instanceof Wall || map[row][col] instanceof Brick)
+							&& p1.willIntersect(map[row][col])) {
+						p1_dir.addAll(p1.willIntersectDir(map[row][col]));
+						System.out.println(row + ", " + col);
+					}
+				}
+			}
+			if (p1_dir.contains(Direction.LEFT)) {
+				p1.v_x = Math.max(0, p1.v_x);
+			}
+			if (p1_dir.contains(Direction.RIGHT)) {
+				p1.v_x = Math.min(0, p1.v_x);
+			}
+			if (p1_dir.contains(Direction.UP)) {
+				p1.v_y = Math.max(0, p1.v_y);
+			}
+			if (p1_dir.contains(Direction.DOWN)) {
+				p1.v_y = Math.min(0, p1.v_y);
+			}
+			
+			for (int row = Math.max(0, p2.pos_x / BLOCK_SIZE - 1); row <= Math
+					.min(p2.pos_x / BLOCK_SIZE + 1, HOR_BLOCKS - 1); row++) {
+				for (int col = Math.max(0, p2.pos_y / BLOCK_SIZE - 1); col <= Math
+						.min(p2.pos_y / BLOCK_SIZE + 1, VER_BLOCKS - 1); col++) {
+					if ((map[row][col] instanceof Wall || map[row][col] instanceof Brick)
+							&& p2.willIntersect(map[row][col])) {
+						p2_dir.addAll(p2.willIntersectDir(map[row][col]));
+						System.out.println(row + ", " + col);
+					}
+				}
+			}
+			if (p2_dir.contains(Direction.LEFT)) {
+				p2.v_x = Math.max(0, p2.v_x);
+			}
+			if (p2_dir.contains(Direction.RIGHT)) {
+				p2.v_x = Math.min(0, p2.v_x);
+			}
+			if (p2_dir.contains(Direction.UP)) {
+				p2.v_y = Math.max(0, p2.v_y);
+			}
+			if (p2_dir.contains(Direction.DOWN)) {
+				p2.v_y = Math.min(0, p2.v_y);
+			}
+			p1_dir.clear();
+			p2_dir.clear();
+
+			p1.move();
+			p2.move();
 
 			// update the display
 			repaint();

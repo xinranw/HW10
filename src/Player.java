@@ -3,6 +3,8 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
+
 import javax.imageio.ImageIO;
 
 public class Player extends GameObj {
@@ -46,6 +48,28 @@ public class Player extends GameObj {
 			break;
 		}
 		return spriteImg;
+	}
 
+	public Set<Direction> willIntersectDir(GameObj obj) {
+		Set<Direction> directions = new TreeSet<Direction>();
+		int next_x = pos_x + v_x;
+		int next_y = pos_y + v_y;
+		int next_obj_x = obj.pos_x + obj.v_x;
+		int next_obj_y = obj.pos_y + obj.v_y;
+		if (v_x != 0){
+			if (next_x + width >= next_obj_x) {
+				directions.add(Direction.RIGHT);
+			} else if (next_obj_x + obj.width >= next_x) {
+				directions.add(Direction.LEFT);
+			}
+		} 
+		if (v_y != 0) {
+			if (next_y + height >= next_obj_y) {
+				directions.add(Direction.DOWN);
+			} else if (next_obj_y + obj.height >= next_y) {
+				directions.add(Direction.UP);
+			}
+		}
+		return directions;
 	}
 }
