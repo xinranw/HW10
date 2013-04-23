@@ -24,7 +24,8 @@ public class GameCourt extends JPanel {
 	private Square square; // the Black Square, keyboard control
 	private Circle snitch; // the Golden Snitch, bounces
 	private Poison poison; // the Poison Mushroom, doesn't move
-	private Brick brick;
+	private Player p1;
+	private Player p2;
 
 	private GameObj[][] map;
 
@@ -34,7 +35,7 @@ public class GameCourt extends JPanel {
 	// Game constants
 	public static final int COURT_WIDTH = 570;
 	public static final int COURT_HEIGHT = 390;
-	public static final int SQUARE_VELOCITY = 4;
+	public static final int PLAYER_VELOCITY = 2;
 	public static final int BLOCK_SIZE = 30;
 	public static final int HOR_BLOCKS = COURT_WIDTH / BLOCK_SIZE;
 	public static final int VER_BLOCKS = COURT_HEIGHT / BLOCK_SIZE;
@@ -70,19 +71,51 @@ public class GameCourt extends JPanel {
 		// moves the square.)
 		addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_LEFT)
-					square.v_x = -SQUARE_VELOCITY;
-				else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
-					square.v_x = SQUARE_VELOCITY;
-				else if (e.getKeyCode() == KeyEvent.VK_DOWN)
-					square.v_y = SQUARE_VELOCITY;
-				else if (e.getKeyCode() == KeyEvent.VK_UP)
-					square.v_y = -SQUARE_VELOCITY;
+				if (e.getKeyCode() == KeyEvent.VK_A) {
+					p1.v_x = -PLAYER_VELOCITY;
+					p1.setSprite(Sprite.LEFT);
+				} else if (e.getKeyCode() == KeyEvent.VK_D) {
+					p1.v_x = PLAYER_VELOCITY;
+					p1.setSprite(Sprite.RIGHT);
+				} else if (e.getKeyCode() == KeyEvent.VK_S) {
+					p1.v_y = PLAYER_VELOCITY;
+					p1.setSprite(Sprite.DOWN);
+				} else if (e.getKeyCode() == KeyEvent.VK_W) {
+					p1.v_y = -PLAYER_VELOCITY;
+					p1.setSprite(Sprite.UP);
+				}				
+				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+					p2.v_x = -PLAYER_VELOCITY;
+					p2.setSprite(Sprite.LEFT);
+				} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+					p2.v_x = PLAYER_VELOCITY;
+					p2.setSprite(Sprite.RIGHT);
+				} else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+					p2.v_y = PLAYER_VELOCITY;
+					p2.setSprite(Sprite.DOWN);
+				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
+					p2.v_y = -PLAYER_VELOCITY;
+					p2.setSprite(Sprite.UP);
+				}
 			}
 
 			public void keyReleased(KeyEvent e) {
-				square.v_x = 0;
-				square.v_y = 0;
+				if (e.getKeyCode() == KeyEvent.VK_D
+						|| e.getKeyCode() == KeyEvent.VK_A) {
+					p1.v_x = 0;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_S
+						|| e.getKeyCode() == KeyEvent.VK_W) {
+					p1.v_y = 0;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT
+						|| e.getKeyCode() == KeyEvent.VK_LEFT) {
+					p2.v_x = 0;
+				}
+				if (e.getKeyCode() == KeyEvent.VK_DOWN
+						|| e.getKeyCode() == KeyEvent.VK_UP) {
+					p2.v_y = 0;
+				}
 			}
 		});
 
@@ -93,12 +126,13 @@ public class GameCourt extends JPanel {
 	 * (Re-)set the state of the game to its initial state.
 	 */
 	public void reset() {
-
 		square = new Square(COURT_WIDTH, COURT_HEIGHT);
 		poison = new Poison(COURT_WIDTH, COURT_HEIGHT);
 		snitch = new Circle(COURT_WIDTH, COURT_HEIGHT);
+
 		map = new GameObj[HOR_BLOCKS][VER_BLOCKS];
 
+		// Populate map with grass, bricks, or walls
 		for (int row = 0; row < HOR_BLOCKS; row++) {
 			for (int col = 0; col < VER_BLOCKS; col++) {
 				if (row % 2 == 1 && col % 2 == 1) {
@@ -120,6 +154,12 @@ public class GameCourt extends JPanel {
 			}
 		}
 
+		p1 = new Player(0, 0, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT,
+				Sprite.RIGHT, "bombermanSprites.png");
+		p2 = new Player(COURT_WIDTH - BLOCK_SIZE - 1, COURT_HEIGHT - BLOCK_SIZE
+				- 2, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT, Sprite.LEFT,
+				"bombermanSprites.png");
+
 		playing = true;
 		status.setText("Running...");
 
@@ -137,6 +177,8 @@ public class GameCourt extends JPanel {
 			// current direction.
 			square.move();
 			snitch.move();
+			p1.move();
+			p2.move();
 
 			// make the snitch bounce off walls...
 			snitch.bounce(snitch.hitWall());
@@ -169,6 +211,8 @@ public class GameCourt extends JPanel {
 				map[row][col].draw(g);
 			}
 		}
+		p1.draw(g);
+		p2.draw(g);
 	}
 
 	@Override

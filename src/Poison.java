@@ -33,7 +33,6 @@ public class Poison extends GameObj {
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(img_file));
-				System.out.print("success");
 			}
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());
