@@ -12,42 +12,48 @@ import java.util.ArrayList;
 /**
  * GameCourt
  * 
- * This class holds the primary game logic of how different objects 
- * interact with one another.  Take time to understand how the timer 
- * interacts with the different methods and how it repaints the GUI 
- * on every tick().
- *
+ * This class holds the primary game logic of how different objects interact
+ * with one another. Take time to understand how the timer interacts with the
+ * different methods and how it repaints the GUI on every tick().
+ * 
  */
 @SuppressWarnings("serial")
 public class GameCourt extends JPanel {
 
 	// the state of the game logic
-	private Square square;          // the Black Square, keyboard control
-	private Circle snitch;          // the Golden Snitch, bounces
-	private Poison poison;          // the Poison Mushroom, doesn't move
-	
-	public boolean playing = false;  // whether the game is running
-	private JLabel status;       // Current status text (i.e. Running...)
+	private Square square; // the Black Square, keyboard control
+	private Circle snitch; // the Golden Snitch, bounces
+	private Poison poison; // the Poison Mushroom, doesn't move
+	private Brick brick;
+
+	private GameObj[][] map;
+
+	public boolean playing = false; // whether the game is running
+	private JLabel status; // Current status text (i.e. Running...)
 
 	// Game constants
-	public static final int COURT_WIDTH = 300;
-	public static final int COURT_HEIGHT = 300;
+	public static final int COURT_WIDTH = 570;
+	public static final int COURT_HEIGHT = 390;
 	public static final int SQUARE_VELOCITY = 4;
-	// Update interval for timer in milliseconds 
-	public static final int INTERVAL = 35; 
+	public static final int BLOCK_SIZE = 30;
+	public static final int HOR_BLOCKS = COURT_WIDTH / BLOCK_SIZE;
+	public static final int VER_BLOCKS = COURT_HEIGHT / BLOCK_SIZE;
 
-	public GameCourt(JLabel status){
+	// Update interval for timer in milliseconds
+	public static final int INTERVAL = 35;
+
+	public GameCourt(JLabel status) {
 		// creates border around the court area, JComponent method
 		setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        
-        // The timer is an object which triggers an action periodically
-        // with the given INTERVAL. One registers an ActionListener with
-        // this timer, whose actionPerformed() method will be called 
-        // each time the timer triggers. We define a helper method
-        // called tick() that actually does everything that should
-        // be done in a single timestep.
-		Timer timer = new Timer(INTERVAL, new ActionListener(){
-			public void actionPerformed(ActionEvent e){
+
+		// The timer is an object which triggers an action periodically
+		// with the given INTERVAL. One registers an ActionListener with
+		// this timer, whose actionPerformed() method will be called
+		// each time the timer triggers. We define a helper method
+		// called tick() that actually does everything that should
+		// be done in a single timestep.
+		Timer timer = new Timer(INTERVAL, new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
 				tick();
 			}
 		});
@@ -60,10 +66,10 @@ public class GameCourt extends JPanel {
 
 		// this key listener allows the square to move as long
 		// as an arrow key is pressed, by changing the square's
-		// velocity accordingly. (The tick method below actually 
+		// velocity accordingly. (The tick method below actually
 		// moves the square.)
-		addKeyListener(new KeyAdapter(){
-			public void keyPressed(KeyEvent e){
+		addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_LEFT)
 					square.v_x = -SQUARE_VELOCITY;
 				else if (e.getKeyCode() == KeyEvent.VK_RIGHT)
@@ -73,7 +79,8 @@ public class GameCourt extends JPanel {
 				else if (e.getKeyCode() == KeyEvent.VK_UP)
 					square.v_y = -SQUARE_VELOCITY;
 			}
-			public void keyReleased(KeyEvent e){
+
+			public void keyReleased(KeyEvent e) {
 				square.v_x = 0;
 				square.v_y = 0;
 			}
@@ -82,13 +89,36 @@ public class GameCourt extends JPanel {
 		this.status = status;
 	}
 
-	/** (Re-)set the state of the game to its initial state.
+	/**
+	 * (Re-)set the state of the game to its initial state.
 	 */
 	public void reset() {
 
 		square = new Square(COURT_WIDTH, COURT_HEIGHT);
 		poison = new Poison(COURT_WIDTH, COURT_HEIGHT);
 		snitch = new Circle(COURT_WIDTH, COURT_HEIGHT);
+		map = new GameObj[HOR_BLOCKS][VER_BLOCKS];
+
+		for (int row = 0; row < HOR_BLOCKS; row++) {
+			for (int col = 0; col < VER_BLOCKS; col++) {
+				if (row % 2 == 1 && col % 2 == 1) {
+					map[row][col] = new Wall(row * BLOCK_SIZE,
+							col * BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH,
+							COURT_HEIGHT);
+				} else if (!(row == 0 && col == 0) && !(row == 1 && col == 0)
+						&& !(row == 0 && col == 1)
+						&& !(row == HOR_BLOCKS - 1 && col == VER_BLOCKS - 1)
+						&& !(row == HOR_BLOCKS - 2 && col == VER_BLOCKS - 1)
+						&& !(row == HOR_BLOCKS - 1 && col == VER_BLOCKS - 2)
+						&& Math.random() < .8) {
+					map[row][col] = new Brick(row * BLOCK_SIZE, col
+							* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT);
+				} else {
+					map[row][col] = new Grass(row * BLOCK_SIZE, col
+							* BLOCK_SIZE, BLOCK_SIZE, COURT_WIDTH, COURT_HEIGHT);
+				}
+			}
+		}
 
 		playing = true;
 		status.setText("Running...");
@@ -97,11 +127,11 @@ public class GameCourt extends JPanel {
 		requestFocusInWindow();
 	}
 
-    /**
-     * This method is called every time the timer defined
-     * in the constructor triggers.
-     */
-	void tick(){
+	/**
+	 * This method is called every time the timer defined in the constructor
+	 * triggers.
+	 */
+	void tick() {
 		if (playing) {
 			// advance the square and snitch in their
 			// current direction.
@@ -112,9 +142,9 @@ public class GameCourt extends JPanel {
 			snitch.bounce(snitch.hitWall());
 			// ...and the mushroom
 			snitch.bounce(snitch.hitObj(poison));
-		
+
 			// check for the game end conditions
-			if (square.intersects(poison)) { 
+			if (square.intersects(poison)) {
 				playing = false;
 				status.setText("You lose!");
 
@@ -122,22 +152,27 @@ public class GameCourt extends JPanel {
 				playing = false;
 				status.setText("You win!");
 			}
-			
+
 			// update the display
 			repaint();
-		} 
+		}
 	}
 
-	@Override 
-	public void paintComponent(Graphics g){
+	@Override
+	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		square.draw(g);
 		poison.draw(g);
 		snitch.draw(g);
+		for (int row = 0; row < HOR_BLOCKS; row++) {
+			for (int col = 0; col < VER_BLOCKS; col++) {
+				map[row][col].draw(g);
+			}
+		}
 	}
 
 	@Override
-	public Dimension getPreferredSize(){
-		return new Dimension(COURT_WIDTH,COURT_HEIGHT);
+	public Dimension getPreferredSize() {
+		return new Dimension(COURT_WIDTH, COURT_HEIGHT);
 	}
 }
