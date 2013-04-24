@@ -319,4 +319,8 @@ public class GameCourt extends JPanel {
 	public Set<Player> getPlayers() {
 		return players;
 	}
+	
+	public int getBlockSize(){
+		return BLOCK_SIZE;
+	}
 }

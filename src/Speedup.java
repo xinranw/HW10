@@ -17,7 +17,7 @@ public class Speedup extends PowerUp {
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(img_file)).getSubimage(32, 0, 32,
-						33);
+						32);
 			}
 		} catch (IOException e) {
 			System.out.println("Internal Error:" + e.getMessage());

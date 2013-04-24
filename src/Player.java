@@ -17,7 +17,7 @@ public class Player extends GameObj {
 	private Direction playerDir;
 	private Boolean placedBomb;
 	private int rad, bombs, speed;
-	private int deaths = 0, kills = 0;
+	private int deaths = 0, kills = 0, bombCounter = 0;
 
 	// Initiates new player, sets default values and displays its sprite
 	public Player(int p_x, int p_y, int width, int height, int courtWidth,
@@ -28,8 +28,8 @@ public class Player extends GameObj {
 		playerDir = dir;
 		placedBomb = false;
 		rad = 1;
-		bombs = 1;
-		speed = 1;
+		bombs = 3;
+		speed = 3;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
@@ -194,26 +194,29 @@ public class Player extends GameObj {
 	// Places a bomb at the player's current location and associates the bomb to
 	// the player as its owner
 	public void bomb(GameObj[][] map, int blockSize, int interval) {
-		int row = 0, col = 0;
-		if (v_x < 0) {
-			row = (pos_x + width) / blockSize;
-		} else if (v_x > 0) {
-			row = pos_x / blockSize;
-		} else if (v_x == 0) {
-			row = (pos_x + width / 2) / blockSize;
-		}
-		if (v_y < 0) {
-			col = (pos_y + height) / blockSize;
-		} else if (v_y > 0) {
-			col = pos_y / blockSize;
-		} else if (v_y == 0) {
-			col = (pos_y + height / 2) / blockSize;
-		}
-		if (!(map[row][col] instanceof Bomb)) {
-			map[row][col] = new Bomb(row * blockSize, col * blockSize,
-					blockSize, map.length * blockSize, map[0].length
-							* blockSize, interval, rad, this);
-			placedBomb = true;
+		if (bombCounter < bombs){
+			int row = 0, col = 0;
+			if (v_x < 0) {
+				row = (pos_x + width) / blockSize;
+			} else if (v_x > 0) {
+				row = pos_x / blockSize;
+			} else if (v_x == 0) {
+				row = (pos_x + width / 2) / blockSize;
+			}
+			if (v_y < 0) {
+				col = (pos_y + height) / blockSize;
+			} else if (v_y > 0) {
+				col = pos_y / blockSize;
+			} else if (v_y == 0) {
+				col = (pos_y + height / 2) / blockSize;
+			}
+			if (!(map[row][col] instanceof Bomb)) {
+				map[row][col] = new Bomb(row * blockSize, col * blockSize,
+						blockSize, map.length * blockSize, map[0].length
+								* blockSize, interval, rad, this);
+				placedBomb = true;
+			}
+			bombCounter++;
 		}
 	}
 
@@ -236,6 +239,10 @@ public class Player extends GameObj {
 	public void increaseBombs() {
 		bombs = Math.min(6, bombs + 1);
 	}
+	
+	public void bombBlown(){
+		bombCounter = Math.max(0, bombCounter - 1);
+	}
 
 	public void increaseSpeed() {
 		speed = Math.min(4, speed + 1);
@@ -245,6 +252,7 @@ public class Player extends GameObj {
 		return speed;
 	}
 	
+
 	// Reset the player after death
 	public void reset(GameCourt gameCourt) {
 		this.pos_x = ORIGINAL_PX;
@@ -252,6 +260,7 @@ public class Player extends GameObj {
 		dirs.clear();
 		isBlown = false;
 		placedBomb = false;
+		bombCounter = 0;
 		deaths++;
 	}
 }

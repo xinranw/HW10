@@ -20,7 +20,7 @@ public class Bomb extends GameObj {
 		super(VEL_X, VEL_Y, p_x, p_y, size, size, courtWidth, courtHeight);
 		timer = 3000 / interval;
 		owner = p;
-		this.rad =rad; 
+		this.rad = rad;
 		try {
 			if (img == null) {
 				img = ImageIO.read(new File(img_file)).getSubimage(243, 90, 20,
@@ -80,5 +80,6 @@ public class Bomb extends GameObj {
 				}
 			}
 		}
+		owner.bombBlown();
 	}
 }
