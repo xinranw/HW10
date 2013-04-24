@@ -54,6 +54,7 @@ public class Bomb extends GameObj {
 		int downRad = 0;
 		int leftRad = 0;
 		int rightRad = 0;
+		isBlown = true;
 
 		for (int col = Math.max(0, pos_y / blockSize - 1); col >= Math.max(0,
 				pos_y / blockSize - rad); col--) {
@@ -93,9 +94,6 @@ public class Bomb extends GameObj {
 			}
 		}
 
-		System.out.println(upRad + ", " + downRad + ", " + leftRad + ", "
-				+ rightRad);
-		isBlown = true;
 		for (int row = Math.max(0, pos_x / blockSize - leftRad); row <= Math
 				.min(pos_x / blockSize + rightRad, mapCols - 1); row++) {
 			for (int col = Math.max(0, pos_y / blockSize - upRad); col <= Math

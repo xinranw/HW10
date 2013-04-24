@@ -27,9 +27,9 @@ public class Player extends GameObj {
 		ORIGINAL_PY = p_y;
 		playerDir = dir;
 		placedBomb = false;
-		rad = 3;
-		bombs = 1;
-		speed = 3;
+		rad = 1;
+		bombs = 4;
+		speed = 4;
 		try {
 			if (spriteMap == null) {
 				spriteMap = ImageIO.read(new File(file));
@@ -124,7 +124,7 @@ public class Player extends GameObj {
 		 */
 
 		if (v_x < 0) {
-			currObj = map[(pos_x + width) / blockSize][(pos_y + height / 2)
+			currObj = map[Math.min(mapCols - 1, (pos_x + width) / blockSize)][(pos_y + height / 2)
 					/ blockSize];
 			nextObj = map[Math.max(0, (pos_x + width) / blockSize
 					- 1)][(pos_y + height / 2) / blockSize];
@@ -189,7 +189,6 @@ public class Player extends GameObj {
 		if (dirs.contains(Direction.DOWN)) {
 			v_y = Math.min(0, v_y);
 		}
-
 		move();
 		dirs.clear();
 	}
@@ -218,8 +217,8 @@ public class Player extends GameObj {
 						blockSize, map.length * blockSize, map[0].length
 								* blockSize, interval, rad, this);
 				placedBomb = true;
+				bombCounter++;
 			}
-			bombCounter++;
 		}
 	}
 
@@ -244,7 +243,7 @@ public class Player extends GameObj {
 	}
 	
 	public void bombBlown(){
-		bombCounter = Math.max(0, bombCounter - 1);
+		bombCounter--;
 	}
 
 	public void increaseSpeed() {
@@ -261,9 +260,10 @@ public class Player extends GameObj {
 		dirs.clear();
 		isBlown = false;
 		placedBomb = false;
-		bombCounter = 0;
 		deaths++;
+		bombCounter = 0;
 		this.pos_x = ORIGINAL_PX;
 		this.pos_y = ORIGINAL_PY;
+		
 	}
 }

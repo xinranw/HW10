@@ -65,6 +65,7 @@ public class Game implements Runnable {
 					helpFrame.add(helpPane);
 					helpFrame.pack();
 					helpFrame.setVisible(true);
+					court.requestFocus();
 				} catch (IOException err) {
 					System.err.println("Attempted to read a bad URL: "
 							+ helpFile.getName());
