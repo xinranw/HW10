@@ -109,6 +109,9 @@ public class Player extends GameObj {
 		GameObj currObj = null;
 		GameObj nextObj = null;
 		GameObj[][] map = gameCourt.getMap();
+		int blockSize = gameCourt.getBlockSize();
+		int mapCols = map.length;
+		int mapRows = map[0].length;
 		// Checks for hitting a wall
 		if (hitWall() != null) {
 			dirs.add(hitWall());
@@ -121,26 +124,26 @@ public class Player extends GameObj {
 		 */
 
 		if (v_x < 0) {
-			currObj = map[(pos_x + width) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
-					/ gameCourt.BLOCK_SIZE];
-			nextObj = map[Math.max(0, (pos_x + width) / gameCourt.BLOCK_SIZE
-					- 1)][(pos_y + height / 2) / gameCourt.BLOCK_SIZE];
+			currObj = map[(pos_x + width) / blockSize][(pos_y + height / 2)
+					/ blockSize];
+			nextObj = map[Math.max(0, (pos_x + width) / blockSize
+					- 1)][(pos_y + height / 2) / blockSize];
 		} else if (v_x > 0) {
-			currObj = map[(pos_x) / gameCourt.BLOCK_SIZE][(pos_y + height / 2)
-					/ gameCourt.BLOCK_SIZE];
-			nextObj = map[Math.min(gameCourt.HOR_BLOCKS - 1, (pos_x)
-					/ gameCourt.BLOCK_SIZE + 1)][(pos_y + height / 2)
-					/ gameCourt.BLOCK_SIZE];
+			currObj = map[(pos_x) / blockSize][(pos_y + height / 2)
+					/ blockSize];
+			nextObj = map[Math.min(mapCols - 1, (pos_x)
+					/ blockSize + 1)][(pos_y + height / 2)
+					/ blockSize];
 		} else if (v_y < 0) {
-			currObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][(pos_y + height)
-					/ gameCourt.BLOCK_SIZE];
-			nextObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][Math.max(
-					0, (pos_y + height) / gameCourt.BLOCK_SIZE - 1)];
+			currObj = map[(pos_x + width / 2) / blockSize][Math.min(mapRows - 1, (pos_y + height)
+					/ blockSize)];
+			nextObj = map[(pos_x + width / 2) / blockSize][Math.max(
+					0, (pos_y + height) / blockSize - 1)];
 		} else if (v_y > 0) {
-			currObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][(pos_y)
-					/ gameCourt.BLOCK_SIZE];
-			nextObj = map[(pos_x + width / 2) / gameCourt.BLOCK_SIZE][Math.min(
-					gameCourt.VER_BLOCKS - 1, (pos_y) / gameCourt.BLOCK_SIZE
+			currObj = map[(pos_x + width / 2) / blockSize][(pos_y)
+					/ blockSize];
+			nextObj = map[(pos_x + width / 2) / blockSize][Math.min(
+					mapRows - 1, (pos_y) / blockSize
 							+ 1)];
 		}
 		if (nextObj instanceof PowerUp) {
@@ -160,11 +163,11 @@ public class Player extends GameObj {
 		}
 
 		// Iterates through nearby blocks to check for directions of collision
-		for (int row = Math.max(0, pos_x / gameCourt.BLOCK_SIZE - 1); row <= Math
-				.min(pos_x / gameCourt.BLOCK_SIZE + 1, gameCourt.HOR_BLOCKS - 1); row++) {
-			for (int col = Math.max(0, pos_y / gameCourt.BLOCK_SIZE - 1); col <= Math
-					.min(pos_y / gameCourt.BLOCK_SIZE + 1,
-							gameCourt.VER_BLOCKS - 1); col++) {
+		for (int row = Math.max(0, pos_x / blockSize - 1); row <= Math
+				.min(pos_x / blockSize + 1, mapCols - 1); row++) {
+			for (int col = Math.max(0, pos_y / blockSize - 1); col <= Math
+					.min(pos_y / blockSize + 1,
+							mapRows - 1); col++) {
 				currObj = map[row][col];
 				if ((currObj instanceof Wall || currObj instanceof Brick || (currObj instanceof Bomb && !placedBomb))
 						&& willIntersect(currObj)) {
