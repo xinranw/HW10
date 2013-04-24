@@ -46,16 +46,62 @@ public class Bomb extends GameObj {
 
 	public void blow(GameCourt gameCourt) {
 		GameObj obj;
+		GameObj[][] map = gameCourt.getMap();
+		int mapCols = map.length;
+		int mapRows = map[0].length;
+		int blockSize = gameCourt.getBlockSize();
+		int upRad = 0;
+		int downRad = 0;
+		int leftRad = 0;
+		int rightRad = 0;
+
+		for (int col = Math.max(0, pos_y / blockSize - 1); col >= Math.max(0,
+				pos_y / blockSize - rad); col--) {
+			upRad++;
+			if (map[pos_x / blockSize][col] instanceof Grass
+					|| map[pos_x / blockSize][col] instanceof PowerUp) {
+			} else {
+				break;
+			}
+		}
+		for (int col = Math.min(mapRows - 1, pos_y / blockSize + 1); col <= Math
+				.min(mapRows - 1, pos_y / blockSize + rad); col++) {
+			downRad++;
+			if (map[pos_x / blockSize][col] instanceof Grass
+					|| map[pos_x / blockSize][col] instanceof PowerUp) {
+			} else {
+				break;
+			}
+		}
+
+		for (int row = Math.max(0, pos_x / blockSize - 1); row >= Math.max(0,
+				pos_x / blockSize - rad); row--) {
+			leftRad++;
+			if (map[row][pos_y / blockSize] instanceof Grass
+					|| map[row][pos_y / blockSize] instanceof PowerUp) {
+			} else {
+				break;
+			}
+		}
+		for (int row = Math.min(mapRows - 1, pos_x / blockSize + 1); row <= Math
+				.min(mapCols - 1, pos_x / blockSize + rad); row++) {
+			rightRad++;
+			if (map[row][pos_y / blockSize] instanceof Grass
+					|| map[row][pos_y / blockSize] instanceof PowerUp) {
+			} else {
+				break;
+			}
+		}
+
+		System.out.println(upRad + ", " + downRad + ", " + leftRad + ", "
+				+ rightRad);
 		isBlown = true;
-		for (int row = Math.max(0, pos_x / gameCourt.BLOCK_SIZE - rad); row <= Math
-				.min(pos_x / gameCourt.BLOCK_SIZE + rad,
-						gameCourt.HOR_BLOCKS - 1); row++) {
-			for (int col = Math.max(0, pos_y / gameCourt.BLOCK_SIZE - rad); col <= Math
-					.min(pos_y / gameCourt.BLOCK_SIZE + rad,
-							gameCourt.VER_BLOCKS - 1); col++) {
+		for (int row = Math.max(0, pos_x / blockSize - leftRad); row <= Math
+				.min(pos_x / blockSize + rightRad, mapCols - 1); row++) {
+			for (int col = Math.max(0, pos_y / blockSize - upRad); col <= Math
+					.min(pos_y / blockSize + downRad, mapRows - 1); col++) {
 				// Check for blowing up players
-				if (row == pos_x / gameCourt.BLOCK_SIZE
-						|| col == pos_y / gameCourt.BLOCK_SIZE) {
+				if (row == pos_x / blockSize || col == pos_y / blockSize) {
 					for (Player p : gameCourt.getPlayers()) {
 						if (gameCourt.getMap()[row][col].intersects(p)) {
 							p.blown();
@@ -66,11 +112,9 @@ public class Bomb extends GameObj {
 					}
 				}
 				// Check for blowing up bricks and other bombs
-				if (row == pos_x / gameCourt.BLOCK_SIZE
-						&& col == pos_y / gameCourt.BLOCK_SIZE) {
+				if (row == pos_x / blockSize && col == pos_y / blockSize) {
 					continue;
-				} else if (row == pos_x / gameCourt.BLOCK_SIZE
-						|| col == pos_y / gameCourt.BLOCK_SIZE) {
+				} else if (row == pos_x / blockSize || col == pos_y / blockSize) {
 					obj = gameCourt.getMap()[row][col];
 					if ((obj instanceof Brick) && !obj.isBlown()) {
 						obj.blown();

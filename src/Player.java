@@ -27,8 +27,8 @@ public class Player extends GameObj {
 		ORIGINAL_PY = p_y;
 		playerDir = dir;
 		placedBomb = false;
-		rad = 1;
-		bombs = 3;
+		rad = 3;
+		bombs = 1;
 		speed = 3;
 		try {
 			if (spriteMap == null) {
@@ -255,12 +255,12 @@ public class Player extends GameObj {
 
 	// Reset the player after death
 	public void reset(GameCourt gameCourt) {
-		this.pos_x = ORIGINAL_PX;
-		this.pos_y = ORIGINAL_PY;
 		dirs.clear();
 		isBlown = false;
 		placedBomb = false;
 		bombCounter = 0;
 		deaths++;
+		this.pos_x = ORIGINAL_PX;
+		this.pos_y = ORIGINAL_PY;
 	}
 }

@@ -289,7 +289,6 @@ public class GameCourt extends JPanel {
 				playing = false;
 				gameStatus.setText("Game Over - P2 Wins!");
 			}
-			
 			// update the display
 			repaint();
 		}
